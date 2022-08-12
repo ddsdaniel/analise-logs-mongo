@@ -10,14 +10,14 @@ namespace AnaliseGrafana.Services
        
         public IEnumerable<Resultado> Analisar(IEnumerable<Log> logs)
         {
-            var intervaloFinal = Math.Truncate(logs.Max(l => l.Duracao) / 1000) + 1;
+            var intervaloFinal = Math.Truncate(logs.Max(l => l.DuracaoMilliSeconds) / 1000) + 1;
             var ocorrenciasAcumuladas = 0;
 
             var resultados = new List<Resultado>();
             for (int i = 0; i <= intervaloFinal; i++)
             {
                 var intervalo = new Intervalo(i, i + 1);
-                var ocorrencias = logs.Count(l => l.Duracao >= intervalo.Inicial * 1000 && l.Duracao <= intervalo.Final * 1000);
+                var ocorrencias = logs.Count(l => l.DuracaoMilliSeconds >= intervalo.Inicial * 1000 && l.DuracaoMilliSeconds <= intervalo.Final * 1000);
                 if (ocorrencias == 0) continue;
 
                 ocorrenciasAcumuladas += ocorrencias;

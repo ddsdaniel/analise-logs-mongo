@@ -28,8 +28,10 @@ namespace AnaliseGrafana.Services
                     var requestPath = LerCampo(linha, "RequestPath", "");
                     var requestMethod = LerCampo(linha, "RequestMethod", "");
                     var requestTime = LerCampo(linha, "RequestTime");
+                    var requestBody = LerCampo(linha, "RequestBody", "");
+                    var responseBody = LerCampo(linha, "ResponseBody", "");
 
-                    return new Log(dataHora, requestPath, requestTime, requestMethod);
+                    return new Log(dataHora, requestPath, requestTime, requestMethod, requestBody, responseBody);
                 })
                 .ToList();
 

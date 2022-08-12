@@ -12,10 +12,12 @@ namespace AnaliseGrafana.Models.TorusPDV
         public int StatusCode { get; set; }
         public double RequestTime { get; set; }
         public string ResponseBody { get; set; }
-        public ResponseHeaders ResponseHeaders { get; set; }
+        //public ResponseHeaders ResponseHeaders { get; set; }
+        public string ResponseHeaders { get; set; }
         public string RequestBody { get; set; }
         public RequestQuery RequestQuery { get; set; }
-        public RequestHeaders RequestHeaders { get; set; }
+        //public RequestHeaders RequestHeaders { get; set; }
+        public string RequestHeaders { get; set; }
         public string Identificacao { get; set; }
         public string RequestId { get; set; }
         public string SpanId { get; set; }

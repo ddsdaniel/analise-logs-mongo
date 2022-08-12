@@ -11,19 +11,19 @@ namespace AnaliseGrafana.Services
         public IEnumerable<AnaliseRequest> Analisar(IEnumerable<Log> logs)
         {
             var analise = logs
-                .Select(l => new Log(l.DataHora, Padronizar(l.RequestPath), l.Duracao, l.RequestMethod))
+                .Select(l => new Log(l.DataHora, Padronizar(l.RequestPath), l.DuracaoMilliSeconds, l.RequestMethod, l.RequestBody, l.ResponseBody))
                 .GroupBy(l => new
                 {
                     l.RequestPath,
                     l.RequestMethod
                 })
                 .Select(g => new AnaliseRequest(
-                    g.First().RequestPath, 
-                    g.Average(l => l.Duracao) / 1000,
+                    g.First().RequestPath,
+                    g.Average(l => l.DuracaoMilliSeconds) / 1000,
                     g.First().RequestMethod,
                     g.Count(),
-                    g.Min(l => l.Duracao) / 1000,
-                    g.Max(l => l.Duracao) / 1000
+                    g.Min(l => l.DuracaoMilliSeconds) / 1000,
+                    g.Max(l => l.DuracaoMilliSeconds) / 1000
                     ))
                 .OrderByDescending(x => x.TempoMedio)
                 .ToList();
@@ -41,19 +41,18 @@ namespace AnaliseGrafana.Services
 
         private static string PadronizarGuid(string valor)
         {
-            valor = Regex.Replace(valor, @"(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}", Guid.Empty.ToString());
+            if (!String.IsNullOrEmpty(valor))
+                valor = Regex.Replace(valor, @"(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}", Guid.Empty.ToString());
+
             return valor;
         }
 
         private static string PadronizarNumeros(string valor)
         {
             const string PATTERN = @"(\/\d+\/)|(\/\d+$)";
-            valor = Regex.Replace(valor, PATTERN, "/#");
 
-            //for (int i = 1; i <= 9; i++)
-            //{
-            //    valor = valor.Replace(i.ToString(), "0");
-            //}
+            if (!String.IsNullOrEmpty(valor))
+                valor = Regex.Replace(valor, PATTERN, "/#");
 
             return valor;
         }

@@ -1,11 +1,13 @@
 ﻿using AnaliseGrafana.Configurations;
 using AnaliseGrafana.Factories;
+using AnaliseGrafana.Models;
 using AnaliseGrafana.Models.TorusPDV;
 using AnaliseGrafana.Services;
 using MongoDB.Driver;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -14,6 +16,8 @@ namespace AnaliseGrafana.Forms
 {
     public partial class FrmPrincipal : Form
     {
+        private IEnumerable<Log> _logs;
+
         private enum ColunasResultados
         {
             Inicial = 0,
@@ -44,69 +48,22 @@ namespace AnaliseGrafana.Forms
 
             FormatarLvwResultados();
             FormatarLvwRequests();
-
-            dtpInicial.Value = Convert.ToDateTime("03/09/2021");
-            dtpFinal.Value = Convert.ToDateTime("03/09/2021 23:59:59");
-
-            //AnalisarTef();
+            RecuperarFiltros();
         }
 
-        private void AnalisarTef()
+        private void RecuperarFiltros()
         {
-            var collectionFactory = new CollectionFactory();
-            var collection = collectionFactory.Criar<LogTorusPDV>("logs");
+            var serializacaoService = new SerializacaoService();
 
-            var dataInicial = Convert.ToDateTime("03/09/2021 18:38");
-            var dataFinal = Convert.ToDateTime("03/09/2021 18:40");
+            var filtros = serializacaoService.Desserializar<Filtro>("filtros.xml");
 
-            var logsTorus = collection
-                .AsQueryable()
-                .Where(l => !l.Properties.RequestPath.EndsWith("Hub") &&
-                            l.Timestamp >= dataInicial &&
-                            l.Timestamp <= dataFinal &&
-                            l.Properties.RequestPath.Contains("/Tef/")
-                            )
-                .OrderBy(l => l.Timestamp)
-                .ToList();
+            if (filtros == null)
+                return;
 
-            var array = logsTorus
-                .Select(l => ObterLinhaPlanilha(l))
-                .ToList();
-
-            var logs = string.Join("\n", array);
-
-            //var array = logsTorus
-            //    .Select(l =>
-            //    {
-
-            //        var proximoComando = "";
-
-            //        if (l.Properties != null && !String.IsNullOrEmpty(l.Properties.ResponseBody))
-            //        {
-            //            var dic = JsonConvert.DeserializeObject<Dictionary<string, string>>(l.Properties.RequestBody);
-            //            if (dic.ContainsKey("proximoComando"))
-            //                proximoComando = dic["proximoComando"];
-            //        }
-            //        return new
-            //        {
-            //            RequestPath = l.Properties.RequestPath,
-            //            l.Properties.RequestTime,
-            //            ProximoComando = proximoComando
-            //        };
-            //    })
-            //    .GroupBy(l => new
-            //    {
-            //        l.RequestPath,
-            //        l.ProximoComando
-            //    })
-            //    .Select(g => new
-            //    {
-            //        g.First().RequestPath,
-            //        g.First().ProximoComando,
-            //        Duracao = Math.Round(g.Sum(l => l.RequestTime) / 1000, 1, MidpointRounding.AwayFromZero)
-            //    })
-            //    .OrderByDescending(x => x.Duracao)
-            //    .ToList();
+            dtpInicial.Value = filtros.DataInicial;
+            dtpFinal.Value = filtros.DataFinal;
+            txtCriterio.Text = filtros.Criterio;
+            txtMetodo.Text = filtros.Metodo;
 
         }
 
@@ -167,6 +124,7 @@ namespace AnaliseGrafana.Forms
             {
                 Cursor = Cursors.WaitCursor;
 
+                SalvarFiltros();
                 Analisar();
             }
             catch (Exception exception)
@@ -179,18 +137,37 @@ namespace AnaliseGrafana.Forms
             }
         }
 
+        private void SalvarFiltros()
+        {
+            var serializacaoService = new SerializacaoService();
+            var filtros = ObterFiltros();
+            serializacaoService.Serializar("filtros.xml", filtros);
+        }
+
+        private Filtro ObterFiltros()
+        {
+            return new Filtro
+            {
+                DataInicial = dtpInicial.Value,
+                DataFinal = dtpFinal.Value,
+                Criterio = txtCriterio.Text,
+                Metodo = txtMetodo.Text                
+            };
+        }
+
         private void Analisar()
         {
-            var importacaoService = new ImportacaoMongoService(dtpInicial.Value, dtpFinal.Value, txtCriterio.Text);
+            var filtro = ObterFiltros();
+            var importacaoService = new ImportacaoMongoService(filtro);
             var analiseService = new AnaliseService();
 
             lvwResultados.Items.Clear();
             lvwRequests.Items.Clear();
 
-            var logs = importacaoService.Importar();
-            if (logs.Any())
+            _logs = importacaoService.Importar();
+            if (_logs.Any())
             {
-                var resultados = analiseService.Analisar(logs);
+                var resultados = analiseService.Analisar(_logs);
 
                 foreach (var resultado in resultados)
                 {
@@ -206,7 +183,7 @@ namespace AnaliseGrafana.Forms
                     lvwResultados.Items.Add(item);
                 }
 
-                AnalisarRequests(logs);
+                AnalisarRequests(_logs);
             }
 
         }
@@ -229,6 +206,35 @@ namespace AnaliseGrafana.Forms
 
                 lvwRequests.Items.Add(item);
             }
+        }
+
+        private void lvwResultados_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (lvwResultados.SelectedItems.Count == 0 || _logs == null)
+                return;
+            
+            var tempoInicial = Convert.ToInt32(lvwResultados.SelectedItems[0].SubItems[(int)ColunasResultados.Inicial].Text) * 1000;
+            var tempoFinal = Convert.ToInt32(lvwResultados.SelectedItems[0].SubItems[(int)ColunasResultados.Final].Text) * 1000;
+
+            var formDetalhe = new FrmDetalhe
+            {
+                Icon = Icon,
+                Logs = _logs.Where(l => l.DuracaoMilliSeconds >= tempoInicial && l.DuracaoMilliSeconds <= tempoFinal)
+            };
+            formDetalhe.ShowDialog();
+        }
+
+        private void btnDetalhar_Click(object sender, EventArgs e)
+        {
+            if (_logs == null)
+                return;
+
+            var formDetalhe = new FrmDetalhe
+            {
+                Icon = Icon,
+                Logs = _logs
+            };
+            formDetalhe.ShowDialog();
         }
     }
 }

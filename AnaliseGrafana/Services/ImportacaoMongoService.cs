@@ -6,20 +6,17 @@ using MongoDB.Driver;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace AnaliseGrafana.Services
 {
     public class ImportacaoMongoService : IImportacaoService
     {
-        private readonly DateTime _dataInicial;
-        private readonly DateTime _dataFinal;
-        private readonly string _criterio;
+        private readonly Filtro _filtro;
 
-        public ImportacaoMongoService(DateTime dataInicial, DateTime dataFinal, string criterio)
+        public ImportacaoMongoService(Filtro filtro)
         {
-            _dataInicial = dataInicial;
-            _dataFinal = dataFinal;
-            _criterio = criterio;
+            _filtro = filtro;
         }
 
         public IEnumerable<Log> Importar()
@@ -27,18 +24,41 @@ namespace AnaliseGrafana.Services
             var collectionFactory = new CollectionFactory();
             var collection = collectionFactory.Criar<LogTorusPDV>("logs");
 
-            var logsTorus = collection
+            var query = collection
                 .AsQueryable()
                 .Where(l => !l.Properties.RequestPath.EndsWith("Hub") &&
-                            l.Timestamp >= _dataInicial &&
-                            l.Timestamp <= _dataFinal &&
-                            l.Properties.RequestPath.Contains(_criterio) &&
-                            l.Level != "Error"
-                            )
+                            l.Timestamp >= _filtro.DataInicial &&
+                            l.Timestamp <= _filtro.DataFinal &&
+                            l.Level != "Error" &&
+                            l.Properties.RequestMethod != null &&
+                            l.Properties.RequestMethod != String.Empty
+                            );
+
+            if (!String.IsNullOrEmpty(_filtro.Criterio))
+            {
+                if (_filtro.Criterio.Contains(";"))
+                {
+                    var criterios = _filtro.Criterio.Split(';');
+
+                    var regex = new Regex(String.Join('|', criterios));
+                   
+                    query = query.Where(l => regex.IsMatch(l.Properties.RequestPath));
+                }
+                else
+                {
+                    query = query.Where(l => l.Properties.RequestPath.Contains(_filtro.Criterio));
+                }
+            }
+
+            if (!String.IsNullOrEmpty(_filtro.Metodo))
+                query = query.Where(l => l.Properties.RequestMethod.Equals(_filtro.Metodo));
+
+            var logsTorus = query
+                .OrderBy(l => l.Timestamp)
                 .ToList();
 
             var logs = logsTorus
-                .Select(l => new Log(l.Timestamp, l.Properties.RequestPath, l.Properties.RequestTime, l.Properties.RequestMethod))
+                .Select(l => new Log(l.Timestamp, l.Properties.RequestPath, l.Properties.RequestTime, l.Properties.RequestMethod, l.Properties.RequestBody, l.Properties.ResponseBody))
                 .ToList();
 
             return logs;

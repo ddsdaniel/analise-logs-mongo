@@ -29,6 +29,7 @@ namespace AnaliseGrafana.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmPrincipal));
             this.btnAnalisar = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.lvwResultados = new System.Windows.Forms.ListView();
@@ -38,14 +39,18 @@ namespace AnaliseGrafana.Forms
             this.label3 = new System.Windows.Forms.Label();
             this.txtCriterio = new System.Windows.Forms.TextBox();
             this.lvwRequests = new System.Windows.Forms.ListView();
+            this.txtMetodo = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.printPreviewDialog1 = new System.Windows.Forms.PrintPreviewDialog();
+            this.btnDetalhar = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnAnalisar
             // 
-            this.btnAnalisar.Location = new System.Drawing.Point(607, 38);
+            this.btnAnalisar.Location = new System.Drawing.Point(756, 38);
             this.btnAnalisar.Name = "btnAnalisar";
             this.btnAnalisar.Size = new System.Drawing.Size(75, 23);
-            this.btnAnalisar.TabIndex = 1;
+            this.btnAnalisar.TabIndex = 4;
             this.btnAnalisar.Text = "Analisar";
             this.btnAnalisar.UseVisualStyleBackColor = true;
             this.btnAnalisar.Click += new System.EventHandler(this.btnAnalisar_Click);
@@ -67,8 +72,9 @@ namespace AnaliseGrafana.Forms
             this.lvwResultados.Location = new System.Drawing.Point(12, 67);
             this.lvwResultados.Name = "lvwResultados";
             this.lvwResultados.Size = new System.Drawing.Size(488, 531);
-            this.lvwResultados.TabIndex = 6;
+            this.lvwResultados.TabIndex = 5;
             this.lvwResultados.UseCompatibleStateImageBehavior = false;
+            this.lvwResultados.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.lvwResultados_MouseDoubleClick);
             // 
             // dtpInicial
             // 
@@ -77,7 +83,7 @@ namespace AnaliseGrafana.Forms
             this.dtpInicial.Location = new System.Drawing.Point(12, 38);
             this.dtpInicial.Name = "dtpInicial";
             this.dtpInicial.Size = new System.Drawing.Size(149, 23);
-            this.dtpInicial.TabIndex = 7;
+            this.dtpInicial.TabIndex = 0;
             // 
             // dtpFinal
             // 
@@ -86,7 +92,7 @@ namespace AnaliseGrafana.Forms
             this.dtpFinal.Location = new System.Drawing.Point(167, 38);
             this.dtpFinal.Name = "dtpFinal";
             this.dtpFinal.Size = new System.Drawing.Size(149, 23);
-            this.dtpFinal.TabIndex = 9;
+            this.dtpFinal.TabIndex = 1;
             // 
             // label2
             // 
@@ -111,7 +117,7 @@ namespace AnaliseGrafana.Forms
             this.txtCriterio.Location = new System.Drawing.Point(322, 38);
             this.txtCriterio.Name = "txtCriterio";
             this.txtCriterio.Size = new System.Drawing.Size(279, 23);
-            this.txtCriterio.TabIndex = 11;
+            this.txtCriterio.TabIndex = 2;
             // 
             // lvwRequests
             // 
@@ -122,14 +128,53 @@ namespace AnaliseGrafana.Forms
             this.lvwRequests.Location = new System.Drawing.Point(506, 67);
             this.lvwRequests.Name = "lvwRequests";
             this.lvwRequests.Size = new System.Drawing.Size(719, 531);
-            this.lvwRequests.TabIndex = 12;
+            this.lvwRequests.TabIndex = 6;
             this.lvwRequests.UseCompatibleStateImageBehavior = false;
+            // 
+            // txtMetodo
+            // 
+            this.txtMetodo.Location = new System.Drawing.Point(607, 38);
+            this.txtMetodo.Name = "txtMetodo";
+            this.txtMetodo.Size = new System.Drawing.Size(143, 23);
+            this.txtMetodo.TabIndex = 3;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(607, 21);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(49, 15);
+            this.label4.TabIndex = 13;
+            this.label4.Text = "Método";
+            // 
+            // printPreviewDialog1
+            // 
+            this.printPreviewDialog1.AutoScrollMargin = new System.Drawing.Size(0, 0);
+            this.printPreviewDialog1.AutoScrollMinSize = new System.Drawing.Size(0, 0);
+            this.printPreviewDialog1.ClientSize = new System.Drawing.Size(400, 300);
+            this.printPreviewDialog1.Enabled = true;
+            this.printPreviewDialog1.Icon = ((System.Drawing.Icon)(resources.GetObject("printPreviewDialog1.Icon")));
+            this.printPreviewDialog1.Name = "printPreviewDialog1";
+            this.printPreviewDialog1.Visible = false;
+            // 
+            // btnDetalhar
+            // 
+            this.btnDetalhar.Location = new System.Drawing.Point(837, 38);
+            this.btnDetalhar.Name = "btnDetalhar";
+            this.btnDetalhar.Size = new System.Drawing.Size(75, 23);
+            this.btnDetalhar.TabIndex = 14;
+            this.btnDetalhar.Text = "Detalhar";
+            this.btnDetalhar.UseVisualStyleBackColor = true;
+            this.btnDetalhar.Click += new System.EventHandler(this.btnDetalhar_Click);
             // 
             // FrmPrincipal
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1237, 610);
+            this.Controls.Add(this.btnDetalhar);
+            this.Controls.Add(this.txtMetodo);
+            this.Controls.Add(this.label4);
             this.Controls.Add(this.lvwRequests);
             this.Controls.Add(this.txtCriterio);
             this.Controls.Add(this.label3);
@@ -157,6 +202,10 @@ namespace AnaliseGrafana.Forms
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox txtCriterio;
         private System.Windows.Forms.ListView lvwRequests;
+        private System.Windows.Forms.TextBox txtMetodo;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.PrintPreviewDialog printPreviewDialog1;
+        private System.Windows.Forms.Button btnDetalhar;
     }
 }
 
